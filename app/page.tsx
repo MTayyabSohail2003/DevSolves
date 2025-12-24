@@ -1,7 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
 import Logo from '@/app/components/ui/Logo';
-import { Button } from '@/app/components/ui';
 
 export default function LandingPage() {
   const features = [
@@ -85,16 +84,22 @@ export default function LandingPage() {
               <Link href="/login" className="text-sm font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors">
                 Sign In
               </Link>
-              <Link href="/register">
-                <Button size="sm">Get Started</Button>
+              <Link
+                href="/register"
+                className="h-9 px-4 bg-[var(--color-primary-500)] hover:bg-[var(--color-primary-600)] text-white text-sm font-medium rounded-lg transition-colors flex items-center"
+              >
+                Get Started
               </Link>
             </div>
             <div className="md:hidden flex items-center gap-4">
               <Link href="/login" className="text-sm font-medium text-[var(--color-primary-600)]">
                 Sign In
               </Link>
-              <Link href="/register">
-                <Button size="sm">Join</Button>
+              <Link
+                href="/register"
+                className="h-9 px-4 bg-[var(--color-primary-500)] hover:bg-[var(--color-primary-600)] text-white text-sm font-medium rounded-lg transition-colors flex items-center"
+              >
+                Join
               </Link>
             </div>
           </div>
@@ -134,18 +139,20 @@ export default function LandingPage() {
 
             {/* CTA Buttons */}
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <Link href="/register">
-                <Button size="lg" className="w-full sm:w-auto px-8 shadow-lg shadow-[var(--color-primary-500)]/25">
-                  Start for Free
-                  <svg className="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                  </svg>
-                </Button>
+              <Link
+                href="/register"
+                className="w-full sm:w-auto h-12 px-8 bg-[var(--color-primary-500)] hover:bg-[var(--color-primary-600)] text-white text-base font-semibold rounded-lg shadow-lg shadow-[var(--color-primary-500)]/25 transition-all flex items-center justify-center gap-2"
+              >
+                Start for Free
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                </svg>
               </Link>
-              <Link href="/dashboard">
-                <Button variant="outline" size="lg" className="w-full sm:w-auto px-8">
-                  Explore Dashboard
-                </Button>
+              <Link
+                href="/dashboard"
+                className="w-full sm:w-auto h-12 px-8 border-2 border-[var(--border-light)] hover:border-[var(--color-primary-400)] text-[var(--text-primary)] text-base font-semibold rounded-lg transition-all flex items-center justify-center"
+              >
+                Explore Dashboard
               </Link>
             </div>
 
@@ -227,15 +234,17 @@ export default function LandingPage() {
             Join thousands of developers who are already sharing knowledge and growing together.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Link href="/register">
-              <Button size="lg" variant="secondary" className="w-full sm:w-auto px-8 bg-white text-[var(--color-primary-600)] hover:bg-white/90">
-                Create Free Account
-              </Button>
+            <Link
+              href="/register"
+              className="w-full sm:w-auto h-12 px-8 bg-white hover:bg-white/90 text-[var(--color-primary-600)] text-base font-semibold rounded-lg transition-all flex items-center justify-center"
+            >
+              Create Free Account
             </Link>
-            <Link href="/dashboard">
-              <Button size="lg" variant="outline" className="w-full sm:w-auto px-8 border-white/30 text-white hover:bg-white/10">
-                Explore Dashboard
-              </Button>
+            <Link
+              href="/dashboard"
+              className="w-full sm:w-auto h-12 px-8 border-2 border-white/30 hover:bg-white/10 text-white text-base font-semibold rounded-lg transition-all flex items-center justify-center"
+            >
+              Explore Dashboard
             </Link>
           </div>
         </div>

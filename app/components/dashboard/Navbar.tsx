@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Search, Bell, Menu, X, ChevronDown } from 'lucide-react';
 import Logo from '@/app/components/ui/Logo';
+import { ModeToggle } from '@/app/components/darkmode';
 
 interface NavbarProps {
   onMenuToggle: () => void;
@@ -65,6 +66,9 @@ export default function Navbar({ onMenuToggle, isSidebarOpen }: NavbarProps) {
             <Bell className="w-5 h-5" />
             <span className="absolute top-1 right-1 w-2 h-2 bg-[var(--color-primary-500)] rounded-full" />
           </button>
+
+          {/* Dark Mode Toggle */}
+          <ModeToggle />
 
           {/* Ask Question Button */}
           <Link

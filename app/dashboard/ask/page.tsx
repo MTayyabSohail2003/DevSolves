@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Button, Input } from '@/app/components/ui';
 
 export default function AskQuestionPage() {
   const [title, setTitle] = useState('');
@@ -18,19 +17,24 @@ export default function AskQuestionPage() {
       </div>
 
       <div className="bg-[var(--bg-primary)] rounded-2xl border border-[var(--border-light)] p-6 space-y-6">
+        {/* Title Input */}
         <div>
           <label className="block text-sm font-medium text-[var(--text-primary)] mb-2">
             Title
           </label>
-          <Input
+          <input
             type="text"
             placeholder="e.g. How do I implement authentication in Next.js?"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            hint="Be specific and imagine you're asking another person"
+            className="w-full h-12 px-4 bg-[var(--bg-secondary)] border-2 border-[var(--border-light)] rounded-lg text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--color-primary-500)] focus:bg-[var(--bg-primary)] hover:border-[var(--border-medium)] transition-all"
           />
+          <p className="mt-2 text-sm text-[var(--text-tertiary)]">
+            Be specific and imagine you&apos;re asking another person
+          </p>
         </div>
 
+        {/* Body Textarea */}
         <div>
           <label className="block text-sm font-medium text-[var(--text-primary)] mb-2">
             Body
@@ -47,26 +51,31 @@ export default function AskQuestionPage() {
           </p>
         </div>
 
+        {/* Tags Input */}
         <div>
           <label className="block text-sm font-medium text-[var(--text-primary)] mb-2">
             Tags
           </label>
-          <Input
+          <input
             type="text"
             placeholder="e.g. javascript, react, nextjs"
             value={tags}
             onChange={(e) => setTags(e.target.value)}
-            hint="Add up to 5 tags to describe what your question is about"
+            className="w-full h-12 px-4 bg-[var(--bg-secondary)] border-2 border-[var(--border-light)] rounded-lg text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--color-primary-500)] focus:bg-[var(--bg-primary)] hover:border-[var(--border-medium)] transition-all"
           />
+          <p className="mt-2 text-sm text-[var(--text-tertiary)]">
+            Add up to 5 tags to describe what your question is about
+          </p>
         </div>
 
+        {/* Action Buttons */}
         <div className="flex items-center gap-4 pt-4 border-t border-[var(--border-light)]">
-          <Button className="px-6">
+          <button className="h-10 px-6 bg-[var(--color-primary-500)] hover:bg-[var(--color-primary-600)] text-white font-medium rounded-lg transition-colors">
             Post Question
-          </Button>
-          <Button variant="outline">
+          </button>
+          <button className="h-10 px-6 border-2 border-[var(--border-light)] hover:border-[var(--color-primary-400)] text-[var(--text-primary)] font-medium rounded-lg transition-colors">
             Save as Draft
-          </Button>
+          </button>
         </div>
       </div>
 
