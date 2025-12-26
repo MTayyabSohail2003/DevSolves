@@ -544,3 +544,683 @@ body {
     @apply bg-background text-foreground;
   }
 }
+
+/* ============================================
+   TIPTAP EDITOR STYLES
+   ============================================ */
+
+/* Editor Container */
+.tiptap-editor-container {
+  display: flex;
+  flex-direction: column;
+  border: 2px solid var(--border-light);
+  border-radius: var(--radius-lg);
+  background: var(--bg-secondary);
+  overflow: hidden;
+  transition: border-color var(--transition-base), box-shadow var(--transition-base);
+}
+
+.tiptap-editor-container:focus-within {
+  border-color: var(--color-primary-500);
+  box-shadow: 0 0 0 3px rgba(255, 161, 46, 0.15);
+}
+
+.tiptap-readonly {
+  background: var(--bg-tertiary);
+}
+
+/* Editor Loading State */
+.tiptap-editor-loading {
+  padding: var(--space-8);
+  text-align: center;
+  color: var(--text-tertiary);
+  font-size: var(--text-sm);
+}
+
+/* ============================================
+   TOOLBAR STYLES
+   ============================================ */
+
+.tiptap-toolbar {
+  display: flex !important;
+  flex-direction: row !important;
+  flex-wrap: wrap !important;
+  align-items: center !important;
+  gap: 4px !important;
+  padding: 8px 12px !important;
+  background: var(--bg-primary);
+  border-bottom: 1px solid var(--border-light);
+}
+
+.toolbar-group {
+  display: inline-flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  gap: 2px !important;
+}
+
+.toolbar-divider {
+  width: 1px !important;
+  height: 24px !important;
+  background: var(--border-light);
+  margin: 0 6px !important;
+  flex-shrink: 0 !important;
+}
+
+/* Toolbar Button */
+.toolbar-btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 36px !important;
+  height: 36px !important;
+  min-width: 36px !important;
+  min-height: 36px !important;
+  padding: 0 !important;
+  border: none !important;
+  border-radius: 6px !important;
+  background: transparent !important;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 150ms ease;
+  flex-shrink: 0 !important;
+}
+
+.toolbar-btn svg {
+  width: 18px !important;
+  height: 18px !important;
+  flex-shrink: 0 !important;
+}
+
+.toolbar-btn:hover:not(:disabled) {
+  background: var(--bg-tertiary) !important;
+  color: var(--text-primary);
+}
+
+.toolbar-btn-active,
+.toolbar-btn.toolbar-btn-active {
+  background: var(--color-primary-500) !important;
+  color: white !important;
+}
+
+.dark .toolbar-btn-active,
+.dark .toolbar-btn.toolbar-btn-active {
+  background: var(--color-primary-600) !important;
+  color: white !important;
+}
+
+.toolbar-btn-active:hover:not(:disabled),
+.toolbar-btn.toolbar-btn-active:hover:not(:disabled) {
+  background: var(--color-primary-600) !important;
+}
+
+.dark .toolbar-btn-active:hover:not(:disabled) {
+  background: var(--color-primary-700) !important;
+}
+
+.toolbar-btn-disabled,
+.toolbar-btn:disabled {
+  opacity: 0.4 !important;
+  cursor: not-allowed !important;
+}
+
+/* Toolbar Dropdown */
+.toolbar-dropdown {
+  position: relative;
+  display: inline-flex !important;
+  flex-shrink: 0 !important;
+}
+
+.toolbar-dropdown-btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 4px !important;
+  height: 36px !important;
+  padding: 0 10px !important;
+  border: none !important;
+  border-radius: 6px !important;
+  background: var(--bg-tertiary) !important;
+  color: var(--text-secondary);
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  cursor: pointer;
+  transition: all 150ms ease;
+  min-width: 70px !important;
+  white-space: nowrap !important;
+}
+
+.toolbar-dropdown-btn svg {
+  width: 14px !important;
+  height: 14px !important;
+  flex-shrink: 0 !important;
+}
+
+.toolbar-dropdown-btn:hover {
+  background: var(--border-light) !important;
+  color: var(--text-primary);
+}
+
+.toolbar-dropdown-open {
+  background: var(--border-light) !important;
+}
+
+.toolbar-dropdown-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin-top: 4px;
+  padding: 4px;
+  min-width: 160px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-light);
+  border-radius: 8px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+  z-index: 200;
+  animation: scaleIn 150ms ease-out;
+}
+
+.toolbar-dropdown-item {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  width: 100%;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-primary);
+  font-size: 14px;
+  text-align: left;
+  cursor: pointer;
+  transition: background 150ms ease;
+}
+
+.toolbar-dropdown-item:hover {
+  background: var(--bg-tertiary);
+}
+
+.toolbar-dropdown-active {
+  background: var(--color-primary-100) !important;
+  color: var(--color-primary-700) !important;
+}
+
+.dark .toolbar-dropdown-active {
+  background: var(--color-primary-900) !important;
+  color: var(--color-primary-300) !important;
+}
+
+/* ============================================
+   EDITOR CONTENT AREA
+   ============================================ */
+
+.tiptap-editor-wrapper {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.tiptap-content {
+  min-height: 200px;
+}
+
+.tiptap-content .tiptap {
+  padding: var(--space-4);
+  min-height: 200px;
+  outline: none;
+}
+
+/* Placeholder */
+.tiptap-content .tiptap p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  color: var(--text-tertiary);
+  pointer-events: none;
+  height: 0;
+}
+
+/* ============================================
+   PROSE STYLES (Content Formatting)
+   ============================================ */
+
+.tiptap-content .tiptap {
+  font-size: var(--text-base);
+  line-height: var(--leading-relaxed);
+  color: var(--text-primary);
+}
+
+/* Headings */
+.tiptap-content .tiptap h1 {
+  font-size: var(--text-3xl);
+  font-weight: var(--font-bold);
+  margin: var(--space-6) 0 var(--space-3);
+  line-height: var(--leading-tight);
+}
+
+.tiptap-content .tiptap h2 {
+  font-size: var(--text-2xl);
+  font-weight: var(--font-semibold);
+  margin: var(--space-5) 0 var(--space-2);
+  line-height: var(--leading-tight);
+}
+
+.tiptap-content .tiptap h3 {
+  font-size: var(--text-xl);
+  font-weight: var(--font-semibold);
+  margin: var(--space-4) 0 var(--space-2);
+  line-height: var(--leading-tight);
+}
+
+/* First heading should have no top margin */
+.tiptap-content .tiptap>h1:first-child,
+.tiptap-content .tiptap>h2:first-child,
+.tiptap-content .tiptap>h3:first-child {
+  margin-top: 0;
+}
+
+/* Paragraphs */
+.tiptap-content .tiptap p {
+  margin: var(--space-3) 0;
+}
+
+.tiptap-content .tiptap>p:first-child {
+  margin-top: 0;
+}
+
+.tiptap-content .tiptap>p:last-child {
+  margin-bottom: 0;
+}
+
+/* Bold */
+.tiptap-content .tiptap strong {
+  font-weight: var(--font-bold);
+}
+
+/* Italic */
+.tiptap-content .tiptap em {
+  font-style: italic;
+}
+
+/* Underline */
+.tiptap-content .tiptap u {
+  text-decoration: underline;
+}
+
+/* Strikethrough */
+.tiptap-content .tiptap s {
+  text-decoration: line-through;
+  color: var(--text-tertiary);
+}
+
+/* Links */
+.tiptap-content .tiptap a,
+.tiptap-content .tiptap .tiptap-link {
+  color: var(--color-primary-600);
+  text-decoration: underline;
+  cursor: pointer;
+  transition: color var(--transition-fast);
+}
+
+.tiptap-content .tiptap a:hover {
+  color: var(--color-primary-700);
+}
+
+.dark .tiptap-content .tiptap a {
+  color: var(--color-primary-400);
+}
+
+.dark .tiptap-content .tiptap a:hover {
+  color: var(--color-primary-300);
+}
+
+/* Lists */
+.tiptap-content .tiptap ul,
+.tiptap-content .tiptap ol {
+  padding-left: var(--space-6);
+  margin: var(--space-3) 0;
+}
+
+.tiptap-content .tiptap ul {
+  list-style-type: disc;
+}
+
+.tiptap-content .tiptap ol {
+  list-style-type: decimal;
+}
+
+.tiptap-content .tiptap li {
+  margin: var(--space-1) 0;
+}
+
+.tiptap-content .tiptap li>p {
+  margin: 0;
+}
+
+/* Nested lists */
+.tiptap-content .tiptap ul ul,
+.tiptap-content .tiptap ol ul {
+  list-style-type: circle;
+}
+
+.tiptap-content .tiptap ul ul ul,
+.tiptap-content .tiptap ol ul ul {
+  list-style-type: square;
+}
+
+/* Blockquote */
+.tiptap-content .tiptap blockquote,
+.tiptap-content .tiptap .tiptap-blockquote {
+  border-left: 4px solid var(--color-primary-500);
+  padding-left: var(--space-4);
+  margin: var(--space-4) 0;
+  color: var(--text-secondary);
+  font-style: italic;
+}
+
+/* Code (inline) */
+.tiptap-content .tiptap code {
+  background: var(--bg-tertiary);
+  padding: 0.1em 0.4em;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+  color: var(--color-primary-700);
+}
+
+.dark .tiptap-content .tiptap code {
+  background: var(--color-secondary-700);
+  color: var(--color-primary-300);
+}
+
+/* Code Block */
+.tiptap-content .tiptap pre,
+.tiptap-content .tiptap .tiptap-code-block {
+  background: var(--color-secondary-900);
+  color: var(--color-secondary-100);
+  padding: var(--space-4);
+  border-radius: var(--radius-md);
+  margin: var(--space-4) 0;
+  overflow-x: auto;
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  line-height: var(--leading-relaxed);
+}
+
+.tiptap-content .tiptap pre code {
+  background: transparent;
+  padding: 0;
+  color: inherit;
+  font-size: inherit;
+}
+
+/* Images */
+.tiptap-content .tiptap img,
+.tiptap-content .tiptap .tiptap-image {
+  max-width: 100%;
+  height: auto;
+  border-radius: var(--radius-md);
+  margin: var(--space-4) 0;
+}
+
+/* Horizontal Rule */
+.tiptap-content .tiptap hr {
+  border: none;
+  border-top: 2px solid var(--border-light);
+  margin: var(--space-6) 0;
+}
+
+/* ============================================
+   FOOTER (Character/Word Count)
+   ============================================ */
+
+.tiptap-footer {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-4);
+  background: var(--bg-primary);
+  border-top: 1px solid var(--border-light);
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+}
+
+.tiptap-count {
+  display: inline-flex;
+  align-items: center;
+}
+
+.tiptap-separator {
+  color: var(--border-medium);
+}
+
+.tiptap-limit {
+  color: var(--text-tertiary);
+}
+
+/* ============================================
+   MODAL STYLES
+   ============================================ */
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  z-index: var(--z-modal);
+  animation: fadeIn 150ms ease-out;
+}
+
+.modal-content {
+  width: 100%;
+  max-width: 400px;
+  margin: var(--space-4);
+  background: var(--bg-primary);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-2xl);
+  animation: scaleIn 200ms ease-out;
+}
+
+.modal-content-lg {
+  max-width: 500px;
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-4) var(--space-5);
+  border-bottom: 1px solid var(--border-light);
+}
+
+.modal-header h3 {
+  font-size: var(--text-lg);
+  font-weight: var(--font-semibold);
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.modal-close-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.modal-close-btn:hover {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+}
+
+.modal-body {
+  padding: var(--space-5);
+}
+
+.modal-field {
+  margin-bottom: var(--space-4);
+}
+
+.modal-field:last-child {
+  margin-bottom: 0;
+}
+
+.modal-label {
+  display: block;
+  margin-bottom: var(--space-2);
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  color: var(--text-primary);
+}
+
+.modal-required {
+  color: var(--color-error-500);
+}
+
+.modal-optional {
+  color: var(--text-tertiary);
+  font-weight: var(--font-normal);
+}
+
+.modal-input {
+  width: 100%;
+  height: 44px;
+  padding: 0 var(--space-3);
+  border: 2px solid var(--border-light);
+  border-radius: var(--radius-md);
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  font-size: var(--text-sm);
+  transition: all var(--transition-fast);
+}
+
+.modal-input::placeholder {
+  color: var(--text-tertiary);
+}
+
+.modal-input:focus {
+  outline: none;
+  border-color: var(--color-primary-500);
+  background: var(--bg-primary);
+}
+
+.modal-input-error {
+  border-color: var(--color-error-500);
+}
+
+.modal-input-error:focus {
+  border-color: var(--color-error-500);
+}
+
+.modal-error {
+  margin-top: var(--space-2);
+  font-size: var(--text-xs);
+  color: var(--color-error-500);
+}
+
+.modal-preview {
+  margin-top: var(--space-4);
+}
+
+.modal-preview-label {
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+  margin-bottom: var(--space-2);
+}
+
+.modal-preview-container {
+  max-height: 200px;
+  overflow: hidden;
+  border-radius: var(--radius-md);
+  background: var(--bg-tertiary);
+}
+
+.modal-preview-container img {
+  width: 100%;
+  height: auto;
+  display: block;
+  object-fit: contain;
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-5);
+  border-top: 1px solid var(--border-light);
+}
+
+.modal-btn-primary,
+.modal-btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  height: 40px;
+  padding: 0 var(--space-4);
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.modal-btn-primary {
+  background: var(--color-primary-500);
+  color: white;
+}
+
+.modal-btn-primary:hover {
+  background: var(--color-primary-600);
+}
+
+.modal-btn-secondary {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+}
+
+.modal-btn-secondary:hover {
+  background: var(--border-light);
+}
+
+/* ============================================
+   RESPONSIVE STYLES
+   ============================================ */
+
+@media (max-width: 640px) {
+  .tiptap-toolbar {
+    padding: var(--space-2);
+    gap: var(--space-1);
+  }
+
+  .toolbar-divider {
+    display: none;
+  }
+
+  .toolbar-group {
+    flex-wrap: wrap;
+  }
+
+  .toolbar-btn {
+    width: 36px;
+    height: 36px;
+  }
+
+  .toolbar-dropdown-btn {
+    min-width: 70px;
+    padding: 0 var(--space-2);
+    font-size: var(--text-xs);
+  }
+
+  .modal-content {
+    margin: var(--space-2);
+  }
+}
