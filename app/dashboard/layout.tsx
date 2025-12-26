@@ -25,9 +25,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
         {/* Main Content Area */}
         <main className="flex-1 min-w-0 px-4 lg:px-6 py-6">
-          <div className="max-w-4xl mx-auto xl:mx-0">
-            {children}
-          </div>
+          {children}
         </main>
 
         {/* Right Sidebar */}

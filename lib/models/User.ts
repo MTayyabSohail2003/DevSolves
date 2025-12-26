@@ -19,6 +19,14 @@ import mongoose, { Document, Model, Schema } from 'mongoose';
 /**
  * Core user data (what we store in DB)
  */
+export interface IAIUsage {
+    totalTokensUsed: number;
+    dailyTokensUsed: number;
+    dailyMessages: number;
+    lastUsedAt?: Date;
+    dailyResetAt?: Date;
+}
+
 export interface IUser {
     name: string;
     email: string;
@@ -31,6 +39,7 @@ export interface IUser {
     resetPasswordToken?: string;
     resetPasswordExpires?: Date;
     lastLoginAt?: Date;
+    aiUsage: IAIUsage;
     createdAt: Date;
     updatedAt: Date;
 }
@@ -118,6 +127,29 @@ const UserSchema = new Schema<IUserDocument, IUserModel>(
         },
         lastLoginAt: {
             type: Date,
+        },
+        aiUsage: {
+            totalTokensUsed: {
+                type: Number,
+                default: 0,
+                min: 0,
+            },
+            dailyTokensUsed: {
+                type: Number,
+                default: 0,
+                min: 0,
+            },
+            dailyMessages: {
+                type: Number,
+                default: 0,
+                min: 0,
+            },
+            lastUsedAt: {
+                type: Date,
+            },
+            dailyResetAt: {
+                type: Date,
+            },
         },
     },
     {

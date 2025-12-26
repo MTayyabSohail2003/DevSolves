@@ -49,7 +49,7 @@ export const sidebarNavigation: NavSection[] = [
         title: 'Personal',
         items: [
             { label: 'Saved', href: '/dashboard/saved', icon: Bookmark },
-            { label: 'AI Assistant', href: '/dashboard/ai', icon: Sparkles },
+            { label: 'AI Assistant', href: '/dashboard/chat', icon: Sparkles },
         ],
     },
 ];

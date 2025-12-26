@@ -15,7 +15,9 @@
  */
 
 import React, { useState, useCallback, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import TiptapEditor from '@/app/components/editor/TiptapEditor';
+import TagInput from '@/app/components/ui/TagInput';
 
 // ============================================
 // TYPE DEFINITIONS
@@ -32,98 +34,64 @@ interface QuestionData {
 }
 
 // ============================================
-// EXAMPLE: BACKEND INTEGRATION FUNCTIONS
+// API INTEGRATION FUNCTIONS
 // ============================================
 
+interface ApiResponse {
+  success: boolean;
+  data?: {
+    _id: string;
+    title: string;
+    body: string;
+    tags: string[];
+  };
+  message?: string;
+}
+
 /**
- * Example: Save question to backend
- * Replace this with your actual API call
+ * Create a question via API
  */
-const saveQuestion = async (data: QuestionData): Promise<{ success: boolean; id?: string; error?: string }> => {
+const createQuestion = async (data: { title: string; body: string; tags: string[] }): Promise<ApiResponse> => {
   try {
-    // Simulating API call delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    const response = await fetch('/api/questions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
 
-    // In real implementation, you would:
-    // const response = await fetch('/api/questions', {
-    //   method: 'POST',
-    //   headers: { 'Content-Type': 'application/json' },
-    //   body: JSON.stringify(data),
-    // });
-    // return await response.json();
-
-    console.log('Question saved:', data);
-    return { success: true, id: 'example-id-123' };
+    return await response.json();
   } catch (error) {
-    console.error('Failed to save question:', error);
-    return { success: false, error: 'Failed to save question' };
+    console.error('Failed to create question:', error);
+    return { success: false, message: 'Network error. Please try again.' };
   }
 };
 
-/**
- * Example: Load saved draft from backend
- * Replace this with your actual API call
- */
-const loadDraft = async (): Promise<QuestionData | null> => {
-  try {
-    // Simulating API call delay
-    await new Promise(resolve => setTimeout(resolve, 500));
-
-    // In real implementation, you would:
-    // const response = await fetch('/api/questions/draft');
-    // if (response.ok) {
-    //   return await response.json();
-    // }
-
-    // Return null if no draft exists
-    return null;
-  } catch (error) {
-    console.error('Failed to load draft:', error);
-    return null;
-  }
-};
 
 // ============================================
 // MAIN COMPONENT
 // ============================================
 
 export default function AskQuestionPage() {
+  const router = useRouter();
+
   // Form state
   const [title, setTitle] = useState('');
   const [body, setBody] = useState('');
-  const [tags, setTags] = useState('');
+  const [tags, setTags] = useState<string[]>([]);
 
   // UI state
   const [isPosting, setIsPosting] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
-  // ============================================
-  // LOAD SAVED DRAFT ON MOUNT
-  // ============================================
-
+  // No draft loading - ready to create new question
   useEffect(() => {
-    const loadSavedDraft = async () => {
-      setIsLoading(true);
-      try {
-        const draft = await loadDraft();
-        if (draft) {
-          setTitle(draft.title);
-          setBody(draft.body);
-          setTags(draft.tags.join(', '));
-          setMessage({ type: 'success', text: 'Draft loaded successfully' });
-          // Clear success message after 3 seconds
-          setTimeout(() => setMessage(null), 3000);
-        }
-      } catch (error) {
-        console.error('Error loading draft:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    loadSavedDraft();
+    // Clear any stale state on mount
+    setTitle('');
+    setBody('');
+    setTags([]);
+    setMessage(null);
   }, []);
 
   // ============================================
@@ -138,15 +106,11 @@ export default function AskQuestionPage() {
   }, []);
 
   /**
-   * Parse tags from comma-separated string
+   * Handle tag changes from TagInput component
    */
-  const parseTags = (tagString: string): string[] => {
-    return tagString
-      .split(',')
-      .map(tag => tag.trim().toLowerCase())
-      .filter(tag => tag.length > 0)
-      .slice(0, 5); // Max 5 tags
-  };
+  const handleTagsChange = useCallback((newTags: string[]) => {
+    setTags(newTags);
+  }, []);
 
   /**
    * Validate form before submission
@@ -185,21 +149,26 @@ export default function AskQuestionPage() {
     setMessage(null);
 
     try {
-      const result = await saveQuestion({
+      const result = await createQuestion({
         title: title.trim(),
         body,
-        tags: parseTags(tags),
-        status: 'published',
+        tags,
       });
 
-      if (result.success) {
-        setMessage({ type: 'success', text: 'Question posted successfully!' });
-        // In real app, you would redirect to the question page:
-        // router.push(`/questions/${result.id}`);
+      if (result.success && result.data) {
+        setMessage({ type: 'success', text: 'Question posted successfully! Redirecting...' });
+        // Clear form
+        setTitle('');
+        setBody('');
+        setTags([]);
+        // Redirect to questions page after short delay
+        setTimeout(() => {
+          router.push('/dashboard/questions');
+        }, 1500);
       } else {
-        setMessage({ type: 'error', text: result.error || 'Failed to post question' });
+        setMessage({ type: 'error', text: result.message || 'Failed to post question' });
       }
-    } catch (error) {
+    } catch {
       setMessage({ type: 'error', text: 'An unexpected error occurred' });
     } finally {
       setIsPosting(false);
@@ -207,36 +176,13 @@ export default function AskQuestionPage() {
   };
 
   /**
-   * Handle saving as draft
+   * Handle clearing the form
    */
-  const handleSaveDraft = async () => {
-    if (!title.trim() && !body.trim()) {
-      setMessage({ type: 'error', text: 'Nothing to save' });
-      return;
-    }
-
-    setIsSaving(true);
+  const handleClear = () => {
+    setTitle('');
+    setBody('');
+    setTags([]);
     setMessage(null);
-
-    try {
-      const result = await saveQuestion({
-        title: title.trim(),
-        body,
-        tags: parseTags(tags),
-        status: 'draft',
-      });
-
-      if (result.success) {
-        setMessage({ type: 'success', text: 'Draft saved successfully!' });
-        setTimeout(() => setMessage(null), 3000);
-      } else {
-        setMessage({ type: 'error', text: result.error || 'Failed to save draft' });
-      }
-    } catch (error) {
-      setMessage({ type: 'error', text: 'An unexpected error occurred' });
-    } finally {
-      setIsSaving(false);
-    }
   };
 
   // ============================================
@@ -265,8 +211,8 @@ export default function AskQuestionPage() {
       {message && (
         <div
           className={`p-4 rounded-lg ${message.type === 'success'
-              ? 'bg-[var(--color-success-50)] text-[var(--color-success-600)] border border-[var(--color-success-500)]'
-              : 'bg-[var(--color-error-50)] text-[var(--color-error-600)] border border-[var(--color-error-500)]'
+            ? 'bg-[var(--color-success-50)] text-[var(--color-success-600)] border border-[var(--color-success-500)]'
+            : 'bg-[var(--color-error-50)] text-[var(--color-error-600)] border border-[var(--color-error-500)]'
             }`}
           role="alert"
         >
@@ -317,31 +263,25 @@ export default function AskQuestionPage() {
         {/* Tags Input */}
         <div>
           <label
-            htmlFor="question-tags"
             className="block text-sm font-medium text-[var(--text-primary)] mb-2"
           >
             Tags
           </label>
-          <input
-            id="question-tags"
-            type="text"
-            placeholder="e.g. javascript, react, nextjs"
+          <TagInput
             value={tags}
-            onChange={(e) => setTags(e.target.value)}
-            className="w-full h-12 px-4 bg-[var(--bg-secondary)] border-2 border-[var(--border-light)] rounded-lg text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--color-primary-500)] focus:bg-[var(--bg-primary)] hover:border-[var(--border-medium)] transition-all"
-            aria-describedby="tags-hint"
+            onChange={handleTagsChange}
+            placeholder="Add a tag (e.g. javascript)"
+            maxTags={5}
+            ariaLabel="Question tags"
           />
-          <p id="tags-hint" className="mt-2 text-sm text-[var(--text-tertiary)]">
-            Add up to 5 tags to describe what your question is about (comma-separated)
-          </p>
         </div>
 
         {/* Action Buttons */}
-        <div className="flex items-center gap-4 pt-4 border-t border-[var(--border-light)]">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4 pt-4 border-t border-[var(--border-light)]">
           <button
             onClick={handlePost}
             disabled={isPosting || isSaving}
-            className="h-10 px-6 bg-[var(--color-primary-500)] hover:bg-[var(--color-primary-600)] disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-colors inline-flex items-center gap-2"
+            className="h-11 sm:h-10 px-6 bg-[var(--color-primary-500)] hover:bg-[var(--color-primary-600)] disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-colors inline-flex items-center justify-center gap-2 order-first"
           >
             {isPosting ? (
               <>
@@ -353,18 +293,11 @@ export default function AskQuestionPage() {
             )}
           </button>
           <button
-            onClick={handleSaveDraft}
-            disabled={isPosting || isSaving}
-            className="h-10 px-6 border-2 border-[var(--border-light)] hover:border-[var(--color-primary-400)] disabled:opacity-50 disabled:cursor-not-allowed text-[var(--text-primary)] font-medium rounded-lg transition-colors inline-flex items-center gap-2"
+            onClick={handleClear}
+            disabled={isPosting}
+            className="h-11 sm:h-10 px-6 border-2 border-[var(--border-light)] hover:border-[var(--border-medium)] hover:bg-[var(--bg-secondary)] disabled:opacity-50 disabled:cursor-not-allowed text-[var(--text-primary)] font-medium rounded-lg transition-colors inline-flex items-center justify-center gap-2"
           >
-            {isSaving ? (
-              <>
-                <span className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                Saving...
-              </>
-            ) : (
-              'Save as Draft'
-            )}
+            Clear
           </button>
         </div>
       </div>
@@ -393,9 +326,9 @@ export default function AskQuestionPage() {
       </div>
 
       {/* Keyboard Shortcuts Info */}
-      <div className="bg-[var(--bg-secondary)] rounded-2xl border border-[var(--border-light)] p-6">
+      <div className="bg-[var(--bg-secondary)] rounded-2xl border border-[var(--border-light)] p-4 sm:p-6">
         <h3 className="font-semibold text-[var(--text-primary)] mb-3">Keyboard Shortcuts</h3>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 text-sm">
           <div className="flex items-center gap-2">
             <kbd className="px-2 py-1 bg-[var(--bg-tertiary)] rounded text-xs font-mono">Ctrl+B</kbd>
             <span className="text-[var(--text-secondary)]">Bold</span>
