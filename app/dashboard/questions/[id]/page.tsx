@@ -1,9 +1,9 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { ArrowLeft, ThumbsUp, ThumbsDown, MessageSquare, Eye, Bookmark, Clock, Share2 } from 'lucide-react';
+import { ArrowLeft, ThumbsUp, ThumbsDown, MessageSquare, Eye, Bookmark, Clock, Share2, Send, AlertCircle, ChevronDown } from 'lucide-react';
 import Prism from 'prismjs';
 import 'prismjs/components/prism-javascript';
 import 'prismjs/components/prism-typescript';
@@ -17,6 +17,8 @@ import 'prismjs/components/prism-bash';
 import 'prismjs/components/prism-sql';
 import 'prismjs/components/prism-markup';
 import Loader from '@/app/components/ui/Loader';
+import { useAuth } from '@/lib/auth/AuthContext';
+import TiptapEditor from '@/app/components/editor/TiptapEditor';
 
 // ============================================
 // TYPE DEFINITIONS
@@ -124,36 +126,145 @@ function highlightCodeBlocks(container: HTMLElement | null) {
 
 export default function QuestionDetailPage() {
     const params = useParams();
+    const { user, isAuthenticated } = useAuth();
     const [question, setQuestion] = useState<Question | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
-    useEffect(() => {
-        const fetchQuestion = async () => {
-            if (!params.id) return;
+    // Answer form state
+    const [answerBody, setAnswerBody] = useState('');
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [submitError, setSubmitError] = useState<string | null>(null);
+    const [submitSuccess, setSubmitSuccess] = useState(false);
 
-            setIsLoading(true);
-            setError(null);
+    // Collapsible answers state - tracks which answers are expanded
+    const [expandedAnswers, setExpandedAnswers] = useState<Set<string>>(new Set());
 
-            try {
-                const response = await fetch(`/api/questions/${params.id}`);
-                const data: ApiResponse = await response.json();
-
-                if (data.success && data.data) {
-                    setQuestion(data.data);
-                } else {
-                    setError(data.message || 'Question not found');
-                }
-            } catch (err) {
-                console.error('Error fetching question:', err);
-                setError('Failed to load question');
-            } finally {
-                setIsLoading(false);
+    // Toggle answer expansion
+    const toggleAnswerExpansion = (answerId: string) => {
+        setExpandedAnswers(prev => {
+            const newSet = new Set(prev);
+            if (newSet.has(answerId)) {
+                newSet.delete(answerId);
+            } else {
+                newSet.add(answerId);
             }
-        };
+            return newSet;
+        });
+    };
 
-        fetchQuestion();
+    // Check if answer content is long (more than 300 chars stripped)
+    const isAnswerLong = (body: string) => {
+        const stripped = body.replace(/<[^>]*>/g, '');
+        return stripped.length > 300;
+    };
+
+    // Vote loading state
+    const [votingQuestion, setVotingQuestion] = useState(false);
+    const [votingAnswers, setVotingAnswers] = useState<Set<string>>(new Set());
+
+    // Handle question vote
+    const handleQuestionVote = async (voteType: 'upvote' | 'downvote') => {
+        if (!isAuthenticated) {
+            alert('Please login to vote');
+            return;
+        }
+        if (!question || votingQuestion) return;
+
+        setVotingQuestion(true);
+        try {
+            const response = await fetch(`/api/questions/${params.id}/vote`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ voteType }),
+            });
+            const data = await response.json();
+            if (data.success) {
+                // Update question with new vote data
+                setQuestion(prev => prev ? {
+                    ...prev,
+                    upvotes: data.data.upvotes,
+                    downvotes: data.data.downvotes,
+                } : null);
+            }
+        } catch (err) {
+            console.error('Vote error:', err);
+        } finally {
+            setVotingQuestion(false);
+        }
+    };
+
+    // Handle answer vote
+    const handleAnswerVote = async (answerId: string, voteType: 'upvote' | 'downvote') => {
+        if (!isAuthenticated) {
+            alert('Please login to vote');
+            return;
+        }
+        if (votingAnswers.has(answerId)) return;
+
+        setVotingAnswers(prev => new Set(prev).add(answerId));
+        try {
+            const response = await fetch(`/api/answers/${answerId}/vote`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ voteType }),
+            });
+            const data = await response.json();
+            if (data.success && question) {
+                // Update the specific answer in question.answers
+                setQuestion(prev => prev ? {
+                    ...prev,
+                    answers: prev.answers.map(a =>
+                        a._id === answerId
+                            ? { ...a, upvotes: data.data.upvotes, downvotes: data.data.downvotes }
+                            : a
+                    ),
+                } : null);
+            }
+        } catch (err) {
+            console.error('Vote error:', err);
+        } finally {
+            setVotingAnswers(prev => {
+                const newSet = new Set(prev);
+                newSet.delete(answerId);
+                return newSet;
+            });
+        }
+    };
+
+    // Check if current user has voted
+    const hasUserUpvotedQuestion = () => question?.upvotes?.includes(user?.id || '') ?? false;
+    const hasUserDownvotedQuestion = () => question?.downvotes?.includes(user?.id || '') ?? false;
+    const hasUserUpvotedAnswer = (answer: Answer) => answer.upvotes?.includes(user?.id || '') ?? false;
+    const hasUserDownvotedAnswer = (answer: Answer) => answer.downvotes?.includes(user?.id || '') ?? false;
+
+    // Fetch question data
+    const fetchQuestion = useCallback(async () => {
+        if (!params.id) return;
+
+        setIsLoading(true);
+        setError(null);
+
+        try {
+            const response = await fetch(`/api/questions/${params.id}`);
+            const data: ApiResponse = await response.json();
+
+            if (data.success && data.data) {
+                setQuestion(data.data);
+            } else {
+                setError(data.message || 'Question not found');
+            }
+        } catch (err) {
+            console.error('Error fetching question:', err);
+            setError('Failed to load question');
+        } finally {
+            setIsLoading(false);
+        }
     }, [params.id]);
+
+    useEffect(() => {
+        fetchQuestion();
+    }, [fetchQuestion]);
 
     // Highlight code blocks when question loads
     useEffect(() => {
@@ -165,6 +276,52 @@ export default function QuestionDetailPage() {
             }, 100);
         }
     }, [question, isLoading]);
+
+    // Handle answer submission
+    const handleAnswerSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+
+        if (!isAuthenticated) {
+            setSubmitError('You must be logged in to post an answer');
+            return;
+        }
+
+        const strippedAnswer = answerBody.replace(/<[^>]*>/g, '').trim();
+        if (strippedAnswer.length < 30) {
+            setSubmitError('Answer must be at least 30 characters');
+            return;
+        }
+
+        setIsSubmitting(true);
+        setSubmitError(null);
+        setSubmitSuccess(false);
+
+        try {
+            const response = await fetch(`/api/questions/${params.id}/answers`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ body: answerBody }),
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                setAnswerBody('');
+                setSubmitSuccess(true);
+                // Refresh question to show new answer
+                await fetchQuestion();
+                // Clear success message after 3 seconds
+                setTimeout(() => setSubmitSuccess(false), 3000);
+            } else {
+                setSubmitError(data.message || 'Failed to post answer');
+            }
+        } catch (err) {
+            console.error('Error posting answer:', err);
+            setSubmitError('Failed to post answer. Please try again.');
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
 
     // Loading State
     if (isLoading) {
@@ -210,8 +367,16 @@ export default function QuestionDetailPage() {
                 <div className="px-6 py-4 border-b border-[var(--border-light)] flex flex-wrap items-center justify-between gap-4">
                     {/* Author */}
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[var(--color-primary-400)] to-[var(--color-accent-500)] flex items-center justify-center text-sm font-semibold text-white">
-                            {(question.author?.name || 'A').charAt(0).toUpperCase()}
+                        <div className="relative w-10 h-10 rounded-full overflow-hidden bg-gradient-to-br from-[var(--color-primary-400)] to-[var(--color-accent-500)] flex items-center justify-center text-sm font-semibold text-white">
+                            {question.author?.avatar ? (
+                                <img
+                                    src={question.author.avatar}
+                                    alt={question.author.name}
+                                    className="w-full h-full object-cover"
+                                />
+                            ) : (
+                                (question.author?.name || 'A').charAt(0).toUpperCase()
+                            )}
                         </div>
                         <div>
                             <div className="font-medium text-[var(--text-primary)]">
@@ -286,11 +451,25 @@ export default function QuestionDetailPage() {
                 {/* Actions */}
                 <div className="px-4 sm:px-6 py-4 bg-[var(--bg-secondary)] border-t border-[var(--border-light)] flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 sm:gap-4">
                     <div className="flex items-center gap-2 w-full sm:w-auto">
-                        <button className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-[var(--color-success-500)]/10 text-[var(--color-success-500)] rounded-lg font-medium hover:bg-[var(--color-success-500)]/20 transition-colors">
+                        <button
+                            onClick={() => handleQuestionVote('upvote')}
+                            disabled={votingQuestion}
+                            className={`flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg font-medium transition-colors disabled:opacity-50 ${hasUserUpvotedQuestion()
+                                    ? 'bg-[var(--color-success-500)] text-white'
+                                    : 'bg-[var(--color-success-500)]/10 text-[var(--color-success-500)] hover:bg-[var(--color-success-500)]/20'
+                                }`}
+                        >
                             <ThumbsUp className="w-4 h-4" />
                             Upvote
                         </button>
-                        <button className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-[var(--bg-tertiary)] text-[var(--text-secondary)] rounded-lg font-medium hover:bg-[var(--border-light)] transition-colors">
+                        <button
+                            onClick={() => handleQuestionVote('downvote')}
+                            disabled={votingQuestion}
+                            className={`flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg font-medium transition-colors disabled:opacity-50 ${hasUserDownvotedQuestion()
+                                    ? 'bg-[var(--color-error-500)] text-white'
+                                    : 'bg-[var(--bg-tertiary)] text-[var(--text-secondary)] hover:bg-[var(--border-light)]'
+                                }`}
+                        >
                             <ThumbsDown className="w-4 h-4" />
                             Downvote
                         </button>
@@ -326,26 +505,75 @@ export default function QuestionDetailPage() {
                                 <div className="flex items-start gap-4">
                                     {/* Vote Buttons - Visible on all screen sizes */}
                                     <div className="flex sm:flex-col items-center gap-2 sm:gap-2 order-first sm:order-none mb-2 sm:mb-0">
-                                        <button className="p-1.5 text-[var(--text-tertiary)] hover:text-[var(--color-success-500)] transition-colors">
-                                            <ThumbsUp className="w-4 h-4 sm:w-5 sm:h-5" />
+                                        <button
+                                            onClick={() => handleAnswerVote(answer._id, 'upvote')}
+                                            disabled={votingAnswers.has(answer._id)}
+                                            className={`p-1.5 transition-colors disabled:opacity-50 ${hasUserUpvotedAnswer(answer)
+                                                    ? 'text-[var(--color-success-500)]'
+                                                    : 'text-[var(--text-tertiary)] hover:text-[var(--color-success-500)]'
+                                                }`}
+                                        >
+                                            <ThumbsUp className={`w-4 h-4 sm:w-5 sm:h-5 ${hasUserUpvotedAnswer(answer) ? 'fill-current' : ''}`} />
                                         </button>
                                         <span className="text-sm font-semibold text-[var(--text-primary)] min-w-[2rem] text-center">
                                             {answer.upvotes.length - answer.downvotes.length}
                                         </span>
-                                        <button className="p-1.5 text-[var(--text-tertiary)] hover:text-[var(--color-error-500)] transition-colors">
-                                            <ThumbsDown className="w-4 h-4 sm:w-5 sm:h-5" />
+                                        <button
+                                            onClick={() => handleAnswerVote(answer._id, 'downvote')}
+                                            disabled={votingAnswers.has(answer._id)}
+                                            className={`p-1.5 transition-colors disabled:opacity-50 ${hasUserDownvotedAnswer(answer)
+                                                    ? 'text-[var(--color-error-500)]'
+                                                    : 'text-[var(--text-tertiary)] hover:text-[var(--color-error-500)]'
+                                                }`}
+                                        >
+                                            <ThumbsDown className={`w-4 h-4 sm:w-5 sm:h-5 ${hasUserDownvotedAnswer(answer) ? 'fill-current' : ''}`} />
                                         </button>
                                     </div>
 
                                     {/* Answer Content */}
                                     <div className="flex-1 min-w-0">
-                                        <div
-                                            className="prose prose-invert max-w-none text-[var(--text-secondary)] mb-4"
-                                            dangerouslySetInnerHTML={{ __html: answer.body }}
-                                        />
-                                        <div className="flex items-center gap-3 text-xs text-[var(--text-tertiary)]">
-                                            <div className="w-5 h-5 rounded-full bg-gradient-to-br from-[var(--color-primary-400)] to-[var(--color-accent-500)] flex items-center justify-center text-[8px] font-semibold text-white">
-                                                {(answer.author?.name || 'A').charAt(0).toUpperCase()}
+                                        {(() => {
+                                            const isLong = isAnswerLong(answer.body);
+                                            const isExpanded = expandedAnswers.has(answer._id);
+
+                                            return (
+                                                <>
+                                                    <div className="relative">
+                                                        <div
+                                                            className={`prose prose-invert max-w-none text-[var(--text-secondary)] overflow-hidden transition-all duration-300 ease-in-out ${isLong && !isExpanded ? 'max-h-32' : 'max-h-[5000px]'
+                                                                }`}
+                                                            style={{
+                                                                maskImage: isLong && !isExpanded ? 'linear-gradient(to bottom, black 60%, transparent 100%)' : 'none',
+                                                                WebkitMaskImage: isLong && !isExpanded ? 'linear-gradient(to bottom, black 60%, transparent 100%)' : 'none',
+                                                            }}
+                                                            dangerouslySetInnerHTML={{ __html: answer.body }}
+                                                        />
+                                                    </div>
+                                                    {isLong && (
+                                                        <button
+                                                            onClick={() => toggleAnswerExpansion(answer._id)}
+                                                            className="mt-2 inline-flex items-center gap-1.5 text-sm font-medium text-[var(--color-primary-500)] hover:text-[var(--color-primary-400)] transition-colors"
+                                                        >
+                                                            <span>{isExpanded ? 'Show less' : 'Read more'}</span>
+                                                            <ChevronDown
+                                                                className={`w-4 h-4 transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`}
+                                                            />
+                                                        </button>
+                                                    )}
+                                                </>
+                                            );
+                                        })()}
+                                        <div className="flex items-center gap-3 text-xs text-[var(--text-tertiary)] mt-4">
+                                            <div className="relative w-5 h-5 rounded-full overflow-hidden bg-gradient-to-br from-[var(--color-primary-400)] to-[var(--color-accent-500)] flex items-center justify-center text-[8px] font-semibold text-white">
+                                                {answer.author?.avatar ? (
+                                                    <img
+                                                        src={answer.author.avatar}
+                                                        alt={answer.author.name}
+                                                        className="w-full h-full object-cover"
+                                                    />
+                                                ) : (
+                                                    (answer.author?.name || 'A').charAt(0).toUpperCase()
+                                                )}
                                             </div>
                                             <span className="font-medium text-[var(--text-primary)]">
                                                 {answer.author?.name || 'Anonymous'}
@@ -366,15 +594,63 @@ export default function QuestionDetailPage() {
                     <h2 className="text-lg font-semibold text-[var(--text-primary)]">Your Answer</h2>
                 </div>
                 <div className="p-6">
-                    <textarea
-                        placeholder="Write your answer here... You can use markdown for formatting."
-                        className="w-full h-40 px-4 py-3 bg-[var(--bg-secondary)] border border-[var(--border-light)] rounded-xl text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--color-primary-500)] resize-none"
-                    />
-                    <div className="flex justify-end mt-4">
-                        <button className="inline-flex items-center gap-2 px-6 py-2 bg-[var(--color-primary-500)] text-white rounded-lg font-medium hover:bg-[var(--color-primary-600)] transition-colors">
-                            Post Answer
-                        </button>
-                    </div>
+                    {!isAuthenticated ? (
+                        <div className="text-center py-8">
+                            <AlertCircle className="w-12 h-12 mx-auto mb-4 text-[var(--text-tertiary)]" />
+                            <p className="text-[var(--text-secondary)] mb-4">You must be logged in to post an answer</p>
+                            <Link
+                                href="/login"
+                                className="inline-flex items-center gap-2 px-6 py-2 bg-[var(--color-primary-500)] text-white rounded-lg font-medium hover:bg-[var(--color-primary-600)] transition-colors"
+                            >
+                                Login to Answer
+                            </Link>
+                        </div>
+                    ) : (
+                        <form onSubmit={handleAnswerSubmit}>
+                            {submitError && (
+                                <div className="mb-4 p-3 bg-[var(--color-error-500)]/10 border border-[var(--color-error-500)]/30 rounded-lg flex items-center gap-2 text-[var(--color-error-500)]">
+                                    <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                                    <span className="text-sm">{submitError}</span>
+                                </div>
+                            )}
+                            {submitSuccess && (
+                                <div className="mb-4 p-3 bg-[var(--color-success-500)]/10 border border-[var(--color-success-500)]/30 rounded-lg text-[var(--color-success-500)] text-sm">
+                                    Answer posted successfully!
+                                </div>
+                            )}
+                            <TiptapEditor
+                                value={answerBody}
+                                onChange={(html) => {
+                                    setAnswerBody(html);
+                                    setSubmitError(null);
+                                }}
+                                placeholder="Write your answer here... (minimum 30 characters)"
+                                ariaLabel="Answer editor"
+                            />
+                            <div className="flex items-center justify-between mt-4">
+                                <span className="text-xs text-[var(--text-tertiary)]">
+                                    {answerBody.replace(/<[^>]*>/g, '').length} / 30 minimum characters
+                                </span>
+                                <button
+                                    type="submit"
+                                    disabled={isSubmitting || answerBody.replace(/<[^>]*>/g, '').trim().length < 30}
+                                    className="inline-flex items-center gap-2 px-6 py-2 bg-[var(--color-primary-500)] text-white rounded-lg font-medium hover:bg-[var(--color-primary-600)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    {isSubmitting ? (
+                                        <>
+                                            <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                            Posting...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Send className="w-4 h-4" />
+                                            Post Answer
+                                        </>
+                                    )}
+                                </button>
+                            </div>
+                        </form>
+                    )}
                 </div>
             </div>
         </div>

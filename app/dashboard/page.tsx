@@ -245,8 +245,16 @@ export default function DashboardPage() {
                 <div className="flex flex-wrap items-center justify-between gap-4">
                   {/* Author */}
                   <div className="flex items-center gap-2">
-                    <div className="w-6 h-6 rounded-full bg-gradient-to-br from-[var(--color-primary-400)] to-[var(--color-accent-500)] flex items-center justify-center text-xs font-semibold text-white">
-                      {(question.author?.name || 'A').charAt(0).toUpperCase()}
+                    <div className="relative w-6 h-6 rounded-full overflow-hidden bg-gradient-to-br from-[var(--color-primary-400)] to-[var(--color-accent-500)] flex items-center justify-center text-xs font-semibold text-white">
+                      {question.author?.avatar ? (
+                        <img
+                          src={question.author.avatar}
+                          alt={question.author.name}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        (question.author?.name || 'A').charAt(0).toUpperCase()
+                      )}
                     </div>
                     <span className="text-sm font-medium text-[var(--text-primary)]">
                       {question.author?.name || 'Anonymous'}

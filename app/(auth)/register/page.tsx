@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { registerStep1Schema, registerStep2Schema, getZodErrors } from '@/lib/validations/auth';
+import ImageUpload from '@/app/components/ImageUpload';
 
 interface FormData {
   name: string;
@@ -11,6 +12,7 @@ interface FormData {
   password: string;
   confirmPassword: string;
   acceptTerms: boolean;
+  avatar?: string;
 }
 
 interface ApiError {
@@ -32,6 +34,7 @@ export default function RegisterPage() {
     password: '',
     confirmPassword: '',
     acceptTerms: false,
+    avatar: '',
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -75,6 +78,7 @@ export default function RegisterPage() {
           name: formData.name,
           email: formData.email,
           password: formData.password,
+          avatar: formData.avatar,
         }),
       });
 
@@ -228,6 +232,12 @@ export default function RegisterPage() {
       <div className="bg-[var(--bg-primary)]/80 backdrop-blur-xl rounded-2xl border border-[var(--border-light)] p-6 sm:p-8 shadow-xl">
         {step === 1 ? (
           <div className="space-y-5">
+            <div className="flex justify-center mb-6">
+              <ImageUpload
+                value={formData.avatar || ''}
+                onChange={(url) => setFormData(prev => ({ ...prev, avatar: url }))}
+              />
+            </div>
             <div>
               <label className="block text-sm font-medium text-[var(--text-primary)] mb-2">Full Name</label>
               <input type="text" name="name" placeholder="John Doe" value={formData.name} onChange={handleChange}

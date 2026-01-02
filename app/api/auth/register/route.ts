@@ -49,7 +49,7 @@ export async function POST(request: NextRequest) {
 
         // Parse request body
         const body = await request.json();
-        const { name, email, password } = body;
+        const { name, email, password, avatar } = body;
 
         // Validate required fields
         if (!name || !email || !password) {
@@ -114,6 +114,7 @@ export async function POST(request: NextRequest) {
             name: name.trim(),
             email: email.toLowerCase().trim(),
             password,
+            avatar: avatar || null,
             verificationToken: hashedVerificationToken,
             isVerified: false,
         });

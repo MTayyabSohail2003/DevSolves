@@ -50,7 +50,7 @@ const Logo: React.FC<LogoProps> = ({
             d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"
           />
         </svg>
-        
+
         {/* Animated Glow */}
         <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-[var(--color-primary-400)] to-[var(--color-accent-500)] opacity-0 group-hover:opacity-50 blur-xl transition-opacity duration-300" />
       </div>
@@ -62,9 +62,10 @@ const Logo: React.FC<LogoProps> = ({
             className={`
               ${sizes[size].text}
               font-bold tracking-tight
-              bg-gradient-to-r from-[var(--color-primary-600)] to-[var(--color-accent-600)]
+              bg-gradient-to-r from-[var(--color-primary-500)] to-[var(--color-accent-500)]
+              dark:from-[var(--color-primary-400)] dark:to-[var(--color-accent-400)]
               bg-clip-text text-transparent
-              group-hover:from-[var(--color-primary-500)] group-hover:to-[var(--color-accent-500)]
+              group-hover:from-[var(--color-primary-400)] group-hover:to-[var(--color-accent-400)]
               transition-all duration-300
             `}
           >

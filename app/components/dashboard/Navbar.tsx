@@ -134,8 +134,16 @@ export default function Navbar({ onMenuToggle, isSidebarOpen }: NavbarProps) {
               onClick={() => setIsProfileOpen(!isProfileOpen)}
               className="flex items-center gap-2 p-1.5 rounded-lg hover:bg-[var(--bg-secondary)] transition-colors"
             >
-              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[var(--color-primary-500)] to-[var(--color-accent-600)] flex items-center justify-center text-white font-semibold text-sm">
-                {user ? getInitials(user.name) : 'U'}
+              <div className="relative w-8 h-8 rounded-full overflow-hidden bg-gradient-to-br from-[var(--color-primary-500)] to-[var(--color-accent-600)] flex items-center justify-center text-white font-semibold text-sm">
+                {user?.avatar ? (
+                  <img
+                    src={user.avatar}
+                    alt={user.name}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  user ? getInitials(user.name) : 'U'
+                )}
               </div>
               <ChevronDown className={`w-4 h-4 text-[var(--text-tertiary)] transition-transform ${isProfileOpen ? 'rotate-180' : ''}`} />
             </button>
